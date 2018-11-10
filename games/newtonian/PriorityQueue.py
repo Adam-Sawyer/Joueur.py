@@ -4,6 +4,7 @@ class PriorityQueue:
 
     @property
     def values(self):
+        # TODO - Is this organized by priority
         return sum(self.buckets.values(), [])
 
     def add(self, priority, value):
@@ -24,3 +25,18 @@ class PriorityQueue:
             del self.buckets[min_key]
 
         return temp
+
+    def __getattr__(self, index):
+        return self.values[index]
+
+    def clear(self):
+        self.buckets = {}
+
+if True: #__name__ == '__main__':
+    tester = PriorityQueue()
+    tester.add(5, '9')
+    tester.add(2, '1')
+    tester.add(1, '3')
+    #tester.add(5, '10')
+
+    print(tester.values)
