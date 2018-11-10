@@ -58,3 +58,5 @@ docs/output/
 
 # PyBuilder
 target/
+
+.idea/
