@@ -1,3 +1,5 @@
+debug = True
+
 # This is where you build your AI for the Newtonian game.
 
 from joueur.base_ai import BaseAI
@@ -6,7 +8,8 @@ from joueur.base_ai import BaseAI
 # you can add additional import(s) here
 
 # Un-comment this line if you would like to use the debug map, which requires the colorama package.
-# from colorama import init, Fore, Back, Style
+if debug:
+    from colorama import init, Fore, Back, Style
 
 # <<-- /Creer-Merge: imports -->>
 
@@ -39,7 +42,6 @@ class AI(BaseAI):
         """
         # <<-- Creer-Merge: get-name -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
         return "GrAIvy Gang"
-        # <<-- /Creer-Merge: get-name -->>
 
     def start(self):
         """ This is called once the game starts and your AI knows its player and
