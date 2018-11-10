@@ -7,6 +7,9 @@ class PriorityQueue:
         # TODO - Is this organized by priority
         return sum(self.buckets.values(), [])
 
+    def __getattr__(self, index):
+        return self.values[index]
+
     def add(self, priority, value):
         if priority in self.buckets.keys():
             self.buckets[priority].append(value)
@@ -25,9 +28,6 @@ class PriorityQueue:
             del self.buckets[min_key]
 
         return temp
-
-    def __getattr__(self, index):
-        return self.values[index]
 
     def clear(self):
         self.buckets = {}
