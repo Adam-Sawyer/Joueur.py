@@ -11,6 +11,8 @@ from joueur.base_ai import BaseAI
 if debug:
     from colorama import init, Fore, Back, Style
 
+from base_movements import *
+
 # <<-- /Creer-Merge: imports -->>
 
 
@@ -378,4 +380,24 @@ class AI(BaseAI):
               + '\tPressure: ' + str(self.player.opponent.pressure) + Fore.RESET)
 
         return
+
+    def action(self, keywd, tile, unit, path):
+        path = self.find_path(unit.tile, tile)
+        if keywd != 'move':
+            path.pop()
+
+        for t in path:
+            unit.move(t)
+
+        if keywd == 'attack':
+            unit.attack(tile)
+
+        elif keywd != 'move':
+            unit.act(tile)
+
+        if unit.acted == True || keywd == 'move':
+            return True
+        else:
+            return False
+
     # <<-- /Creer-Merge: functions -->>
