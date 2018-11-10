@@ -38,7 +38,7 @@ class AI(BaseAI):
             str: The name of your Player.
         """
         # <<-- Creer-Merge: get-name -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
-        return "Gravy Gang"  # REPLACE THIS WITH YOUR TEAM NAME
+        return "GrAIvy Gang"
         # <<-- /Creer-Merge: get-name -->>
 
     def start(self):
