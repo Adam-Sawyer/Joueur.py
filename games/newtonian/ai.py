@@ -87,6 +87,28 @@ class AI(BaseAI):
         #combinations to make a phase 1 or 2 IF so initialize a new group with
         #all of new members and delete the old groups
 
+    def group_logic(self, group):
+        if group.phase == 1:
+            phase_1(group)
+        elif group.phase == 2:
+            phase_2(group)
+        else:
+            phase_3(group)
+
+    def phase_1(self, group):
+        if group.task == 'gather':
+            #intern leads the group while gathering 4 resources
+            #When the intern has 4 resources the function returns True
+            # and the task is witch to 'refine'
+        elif group.task == 'refine':
+            #intern leads the group to the refinery, then the physicist refines
+            #materials until they are all refined, switches to 'generate' after This
+            #occurs
+        else group.task == 'generate':
+            #Manager and physicist fill their inventorys with refined materials
+            #and manager leads to generator. After this task is completed switch
+            #back to 'gather task'
+
     def end(self, won, reason):
         """ This is called when the game ends, you can clean up your data and
             dump files here if need be.
