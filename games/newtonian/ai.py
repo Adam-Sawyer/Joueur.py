@@ -8,10 +8,10 @@ from joueur.base_ai import BaseAI
 # you can add additional import(s) here
 
 # Un-comment this line if you would like to use the debug map, which requires the colorama package.
-#if debug:
-#    from colorama import init, Fore, Back, Style
+if debug:
+    from colorama import init, Fore, Back, Style
 
-#from base_movements import *
+from base_movements import *
 
 # <<-- /Creer-Merge: imports -->>
 
@@ -100,11 +100,8 @@ class AI(BaseAI):
                 else:
                     print("Member has type i don't know how to read -> class group")
 
-                return False
-
-        self.groups = []
         # Un-comment this line if you are using colorama for the debug map.
-        # init
+        # init()
 
         # <<-- /Creer-Merge: start -->>
 
@@ -162,7 +159,7 @@ class AI(BaseAI):
             #intern leads the group while gathering 4 resources
             #When the intern has 4 resources the function returns True
             # and the task is witch to 'refine'
-            
+
         elif group.task == 'refine':
             #intern leads the group to the refinery, then the physicist refines
             #materials until they are all refined, switches to 'generate' after This
@@ -202,7 +199,10 @@ class AI(BaseAI):
         Please note: This code is intentionally bad. You should try to optimize everything here. THe code here is only to show you how to use the game's
                      mechanics with the MegaMinerAI server framework.
         """
+<<<<<<< HEAD
         self.group_update()
+=======
+>>>>>>> 620c81c424fd050b02fa58acba780550ec3c3ab6
 
         # Goes through all the units that you own.
         for unit in self.player.units:
@@ -493,6 +493,45 @@ class AI(BaseAI):
 
         return
 
+    def parsefield(map):
+        output = {
+        'blueium': [], 'redium': [], 'enemy': [], 'team': [], 'refinery': [],
+        'generator': [], 'spawn': []
+        }
+
+        for tile in map:
+            if tile.blueium > 0:
+                output['blueium'].append(tile)
+                pass
+
+            if tile.redium > 0:
+                output['redium'].append(title)
+                pass
+
+            if tile.machine:
+                output['refinery'].append(tile)
+                pass
+
+            if tile.type == 'generator':
+                output['generator'].append(tile)
+                pass
+
+            if tile.type == 'conveyor':
+                output['conveyor'].append(tile)
+                pass
+
+            if tile.type == 'spawn':
+                output['spawn'].append(tile)
+                pass
+
+            if tile.unit:
+                if tile.unit.owner == self.player.enemy:  # TODO - double check
+                    output['team'].append(tile)
+                else:
+                    output['enemy'].append(tile)
+
+
+
     def action(self, keywd, tile, unit, path):
         path = self.find_path(unit.tile, tile)
         if keywd != 'move':
@@ -507,7 +546,7 @@ class AI(BaseAI):
         elif keywd != 'move':
             unit.act(tile)
 
-        if unit.acted == True or keywd == 'move':
+        if unit.acted == True || keywd == 'move':
             return True
         else:
             return False
