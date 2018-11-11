@@ -17,7 +17,7 @@ from base_movements import *
 
 
 class AI(BaseAI):
-    """ The AI you add and improve code inside to play Newtonian. """
+    """ The AI you add and improve code inside to play Newtonian. """'
 
     @property
     def game(self):
@@ -51,9 +51,22 @@ class AI(BaseAI):
         """
         # <<-- Creer-Merge: start -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
         # replace with your start logic
+        class group:
+            def __init__(self, *unit):
+                self.units = unit
+                if len(self.units) == 3:
+                    self.phase = 1
+                    self.task = 'gather'
+                elif len(self.units) == 2:
+                    self.phase = 2
+                    self.task = 'hunt'
+                else:
+                    self.phase = 3
+                    self.task = 'link2'
 
+        self.groups = []
         # Un-comment this line if you are using colorama for the debug map.
-        # init()
+        # init
 
         # <<-- /Creer-Merge: start -->>
 
@@ -64,6 +77,15 @@ class AI(BaseAI):
         # <<-- Creer-Merge: game-updated -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
         # replace with your game updated logic
         # <<-- /Creer-Merge: game-updated -->>
+
+    def group_update(self):
+        #go through all of the groups
+            #if a group member has died count the amount of members and adjust
+            #phase accordingly and remove member from list
+            #if a group in phase 2 or 3 is found append it to a temporary list
+        #look through the list of phase 2 and 3 groups and see if there are any
+        #combinations to make a phase 1 or 2 IF so initialize a new group with
+        #all of new members and delete the old groups
 
     def end(self, won, reason):
         """ This is called when the game ends, you can clean up your data and
@@ -91,7 +113,7 @@ class AI(BaseAI):
         Please note: This code is intentionally bad. You should try to optimize everything here. THe code here is only to show you how to use the game's
                      mechanics with the MegaMinerAI server framework.
         """
-
+        group_update()
         # Goes through all the units that you own.
         for unit in self.player.units:
             # Only tries to do something if the unit actually exists.
