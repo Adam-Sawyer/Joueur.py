@@ -208,6 +208,7 @@ class AI(BaseAI):
                     group.i_unit.drop(group.i_unit.tile, group.i_unit.bluieum_ore,
                     'blueium ore')
                     if group.i_unit.redium_ore == 4:
+                        print("task switched to refine")
                         group.task = 'refine'
         elif group.task == 'refine':
             #intern leads the group to the refinery, then the physicist refines
@@ -254,7 +255,7 @@ class AI(BaseAI):
                     self.groups[-1].add(i)
 
     def run_turn(self):
-        if self.game.current_turn > 50:
+        if self.game.current_turn > 100:
             sys.exit()
         """ This is called every time it is this AI.player's turn.
 
@@ -476,7 +477,6 @@ class AI(BaseAI):
             current = min(parsed_f_score, key=parsed_f_score.get)  #the node in open_set having the lowest f_score[] value
 
             if current in goals:
-                print("Start", start.x, start.y)
                 return self.reconstruct_path(comes_from, current)
 
             if current in open_set:
@@ -629,7 +629,7 @@ class AI(BaseAI):
                         if t.owner == self.player:
                             print(Back.CYAN, end='')
                         else:
-                            print(Back.MAGENTA, end='')
+                            self.Group(Back.MAGENTA, end='')
 
                 print(foreground + Fore.RESET + Back.RESET, end='')
 
@@ -670,13 +670,14 @@ class AI(BaseAI):
                 self.output['redium ore'].append(tile)
                 pass
 
-            if tile.machine.ore_type = 'redium' and tile.machine.worked == 0:
-                self.output['redium refinery'].append(tile)
-                pass
+            if tile.machine:
+                if tile.machine.ore_type == 'redium' and tile.machine.worked == 0:
+                    self.output['redium refinery'].append(tile)
+                    pass
 
-            if tile.machine.ore_type = 'blueium' and tile.machine.worked == 0:
-                self.output['blueium refinery'].append(tile)
-                pass
+                if tile.machine.ore_type == 'blueium' and tile.machine.worked == 0:
+                    self.output['blueium refinery'].append(tile)
+                    pass
 
             if tile.type == 'generator':
                 self.output['generator'].append(tile)
