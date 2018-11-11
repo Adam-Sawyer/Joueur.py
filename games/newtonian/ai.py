@@ -8,8 +8,6 @@ from joueur.base_ai import BaseAI
 # you can add additional import(s) here
 
 # Un-comment this line if you would like to use the debug map, which requires the colorama package.
-if debug:
-    from colorama import init, Fore, Back, Style
 
 # <<-- /Creer-Merge: imports -->>
 
