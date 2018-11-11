@@ -417,7 +417,7 @@ class AI(BaseAI):
         elif keywd != 'move':
             unit.act(tile)
 
-        if unit.acted == True || keywd == 'move':
+        if unit.acted == True or keywd == 'move':
             return True
         else:
             return False
