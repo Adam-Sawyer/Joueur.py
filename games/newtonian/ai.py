@@ -67,6 +67,9 @@ class AI(BaseAI):
 
             return l
 
+        def __len__(self):
+            return len(self.units)
+
         def remove(self, unit):
             if unit == self.i_unit: self.i_unit = None
             if unit == self.m_unit: self.m_unit = None
@@ -78,30 +81,20 @@ class AI(BaseAI):
 
             if type == 'physicist':
                 if self.p_unit == None:
-                    print("Where I should be P")
-                    print(member)
                     self.phase -= 1
                     self.p_unit = member
-                    print("The Length of this group is " + str(len(self.units)))
                     return True
             elif type == 'manager':
                 if self.m_unit == None:
-                    print("Where I should be M")
-                    print(member)
                     self.phase -= 1
                     self.m_unit = member
-                    print("The Length of this group is " + str(len(self.units)))
                     return True
             elif type == 'intern':
                 if self.i_unit == None:
-                    print("Where I should be I")
-                    print(member)
                     self.phase -= 1
                     self.i_unit = member
-                    print("The Length of this group is " + str(len(self.units)))
                     return True
             else:
-                print("Member has type i don't know how to read -> class group %s" , type)
             return False
 
     def start(self):
@@ -148,27 +141,27 @@ class AI(BaseAI):
                 phase2_groups.append(group)
             elif group.phase == 3:
                 phase3_groups.append(group)
+
         for phase2 in phase2_groups:
             for phase3 in phase3_groups:
                 if phase2.add(phase3.units[0]):
-                    phase3.remove[0]
+                    temp = phase3.units[0]
+                    phase3.remove(temp)
                     break
+
         phase3_groups = []
         for group in self.groups:
             if group.phase == 3:
                 phase3_groups.append(group)
         for phase3 in phase3_groups:
-            for phase3_2 in phase3_groups:
+            for phase3_2 in [group for group in phase3_groups if group is not phase3]:
                 if phase3 is phase3_2:
                     break
-                if phase3.add(phase3.units[0]):
-                    phase3.remove[0]
-                    break
-
-
-
-
-
+                if len(phase3_2):
+                    if phase3.add(phase3_2.units[0]):
+                        temp = phase3_2.units[0]
+                        phase3_2.remove(temp)
+                        break
 
     def group_logic(self, group):
         if group.phase == 1:
@@ -217,7 +210,7 @@ class AI(BaseAI):
             #Manager and physicist fill their inventorys with refined materials
             #and manager leads to generator. After this task is completed switch
             #back to 'gather task'
-            if player.pressure < player.heat:
+            if self.player.pressure < self.player.heat:
                 group.gathering = 'blueium'
             else:
                 group.gathering = 'redium'
@@ -242,7 +235,6 @@ class AI(BaseAI):
                     if i is n:
                         inGroup = True
             if inGroup == False:
-                    #print("I MADE A FUCKING GROUP")
                     self.groups.append(self.Group())
                     self.groups[-1].add(i)
 
@@ -261,7 +253,6 @@ class AI(BaseAI):
         """
         self.createGroups()
         self.group_update()
-        print(len(self.groups))
         for group in self.groups:
             self.group_logic(group)
 
