@@ -8,10 +8,6 @@ from joueur.base_ai import BaseAI
 # you can add additional import(s) here
 
 # Un-comment this line if you would like to use the debug map, which requires the colorama package.
-if debug:
-    from colorama import init, Fore, Back, Style
-
-from base_movements import *
 
 # <<-- /Creer-Merge: imports -->>
 
@@ -199,10 +195,7 @@ class AI(BaseAI):
         Please note: This code is intentionally bad. You should try to optimize everything here. THe code here is only to show you how to use the game's
                      mechanics with the MegaMinerAI server framework.
         """
-<<<<<<< HEAD
         self.group_update()
-=======
->>>>>>> 620c81c424fd050b02fa58acba780550ec3c3ab6
 
         # Goes through all the units that you own.
         for unit in self.player.units:
@@ -546,7 +539,7 @@ class AI(BaseAI):
         elif keywd != 'move':
             unit.act(tile)
 
-        if unit.acted == True || keywd == 'move':
+        if unit.acted == True or keywd == 'move':
             return True
         else:
             return False
