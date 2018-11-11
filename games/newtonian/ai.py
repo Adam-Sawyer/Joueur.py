@@ -56,7 +56,7 @@ class AI(BaseAI):
                 self.i_unit = i_unit
                 self.m_unit = m_unit
                 self.p_unit = p_unit
-
+                self.gathering = 'blueium'#Determines if they're gathering blueium or redium
 
                 if len(self.units) == 3:
                     self.phase = 1
@@ -162,6 +162,7 @@ class AI(BaseAI):
             #intern leads the group while gathering 4 resources
             #When the intern has 4 resources the function returns True
             # and the task is witch to 'refine'
+            
         elif group.task == 'refine':
             #intern leads the group to the refinery, then the physicist refines
             #materials until they are all refined, switches to 'generate' after This
@@ -170,6 +171,10 @@ class AI(BaseAI):
             #Manager and physicist fill their inventorys with refined materials
             #and manager leads to generator. After this task is completed switch
             #back to 'gather task'
+            if player.pressure < player.heat:
+                group.gathering = 'blueium'
+            else:
+                group.gathering = 'redium'
 
     def end(self, won, reason):
         """ This is called when the game ends, you can clean up your data and
@@ -198,7 +203,7 @@ class AI(BaseAI):
                      mechanics with the MegaMinerAI server framework.
         """
         self.group_update()
-        
+
         # Goes through all the units that you own.
         for unit in self.player.units:
             # Only tries to do something if the unit actually exists.
