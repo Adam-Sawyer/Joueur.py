@@ -415,7 +415,80 @@ class AI(BaseAI):
         """
         # <<-- /Creer-Merge: runTurn -->>
 
+    @staticmethod
+    def reconstruct_path(path_next, current):
+        # Path_next is dictionary of space: next_space
+
+        total_path = [current]
+
+        while current in path_next.keys():
+            current = path_next[current]
+            total_path.append(current)
+
+        return total_path
+
     def find_path(self, start, goal):
+        def heuristic_cost_estimate(tile_1, tile_2):
+            return ((tile_2.y - tile_1.y)**2 + (tile_2.x - tile_1.x)**2)**.5
+
+        def dist_between(tile_1, tile_2):
+            return abs(tile_1.x - tile_2.x) + abs(tile_1.y - tile_2.y)
+
+        if start == goal: return []
+
+        closed_set = set()  # The set of nodes already evaluated
+
+        # The set of currently discovered nodes that are not evaluated yet.
+        # Initially, only the start node is known.
+        open_set = set()
+        open_set.add(start)
+
+        # For each node, which node it can most efficiently be reached from .
+        # If a node can be reached from many nodes, cameFrom will eventually contain the
+        # most efficient previous step.
+        comes_from = {}
+
+        # For each node, the cost of getting from the start node to that node.
+        g_score = {}  # map with default value of Infinity
+        g_score[start] = 0  # The cost of going from start to start is zero.
+
+
+        # For each node, the total cost of getting from the start node to the goal
+        # by passing by that node.That value is partly known, partly heuristic.
+        f_score = dict()  # map with default value of Infinity
+
+        # For the first node, that value is completely heuristic.
+        f_score[start] = heuristic_cost_estimate(start, goal)
+
+        while open_set:
+            current = min(f_score, key=f_score.get)  #the node in open_set having the lowest f_score[] value
+            if current == goal:
+                return self.reconstruct_path(comes_from, current)
+
+            if current in open_set: open_set.remove(current)
+            closed_set.add(current)
+
+            for neighbor in current.get_neighbors():
+                if neighbor in closed_set:
+                    continue # Ignore the neighbor which is already evaluated.
+
+                # The distance from start to a neighbor
+                tentative_gScore = g_score[current] + dist_between(current, neighbor)
+
+                if neighbor not in open_set: # Discover a new node
+                    open_set.add(neighbor)
+
+                elif tentative_gScore >= g_score[neighbor]:
+                    continue # This is not a better path.
+
+                # This path is the best until now. Record it!
+                comes_from[neighbor] = current
+                g_score[neighbor] = tentative_gScore
+                f_score[neighbor] = g_score[neighbor] + heuristic_cost_estimate(neighbor, goal)
+
+        return []
+
+    def find_path_old(self, start, goal):
         """A very basic path finding algorithm (Breadth First Search) that when
             given a starting Tile, will return a valid path to the goal Tile.
 
