@@ -6,7 +6,7 @@ from joueur.base_ai import BaseAI
 
 # <<-- Creer-Merge: imports -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
 # you can add additional import(s) here
-
+import sys
 # Un-comment this line if you would like to use the debug map, which requires the colorama package.
 
 # <<-- /Creer-Merge: imports -->>
@@ -254,6 +254,8 @@ class AI(BaseAI):
                     self.groups[-1].add(i)
 
     def run_turn(self):
+        if self.game.current_turn > 50:
+            sys.exit()
         """ This is called every time it is this AI.player's turn.
 
         Returns:
@@ -432,9 +434,11 @@ class AI(BaseAI):
             current = path_next[current]
             total_path.append(current)
 
-        return total_path
+        return total_path[::-1]
 
     def find_path(self, start, goal):
+        goals = goal.get_neighbors()
+
         def heuristic_cost_estimate(tile_1, tile_2):
             return ((tile_2.y - tile_1.y)**2 + (tile_2.x - tile_1.x)**2)**.5
 
@@ -468,25 +472,31 @@ class AI(BaseAI):
         f_score[start] = heuristic_cost_estimate(start, goal)
 
         while open_set:
-            current = min(f_score, key=f_score.get)  #the node in open_set having the lowest f_score[] value
-            if current == goal:
+            parsed_f_score = {key: value for key, value in f_score.items() if key in open_set}
+            current = min(parsed_f_score, key=parsed_f_score.get)  #the node in open_set having the lowest f_score[] value
+
+            if current in goals:
+                print("Start", start.x, start.y)
                 return self.reconstruct_path(comes_from, current)
 
-            if current in open_set: open_set.remove(current)
+            if current in open_set:
+                open_set.remove(current)
+
             closed_set.add(current)
 
             for neighbor in current.get_neighbors():
                 if neighbor in closed_set:
-                    continue # Ignore the neighbor which is already evaluated.
+                    continue  # Ignore the neighbor which is already evaluated.
 
                 # The distance from start to a neighbor
                 tentative_gScore = g_score[current] + dist_between(current, neighbor)
 
-                if neighbor not in open_set: # Discover a new node
-                    open_set.add(neighbor)
+                if neighbor not in open_set:  # Discover a new node
+                    if neighbor.is_pathable() and not neighbor.unit:
+                        open_set.add(neighbor)
 
                 elif tentative_gScore >= g_score[neighbor]:
-                    continue # This is not a better path.
+                    continue  # This is not a better path.
 
                 # This path is the best until now. Record it!
                 comes_from[neighbor] = current
@@ -696,6 +706,8 @@ class AI(BaseAI):
         for t in path:
             if unit.moves == 0:
                 break
+
+            print(unit.tile.x, unit.tile.y)
             unit.move(t)
 
         if keywd == 'attack':
