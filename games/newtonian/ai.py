@@ -11,8 +11,6 @@ from joueur.base_ai import BaseAI
 if debug:
     from colorama import init, Fore, Back, Style
 
-from base_movements import *
-
 # <<-- /Creer-Merge: imports -->>
 
 
@@ -45,60 +43,76 @@ class AI(BaseAI):
         # <<-- Creer-Merge: get-name -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
         return "GrAIvy Gang"
 
+    class Group:
+        def __init__(self, i_unit=None, m_unit=None, p_unit=None):
+            self.i_unit = i_unit
+            self.m_unit = m_unit
+            self.p_unit = p_unit
+            self.gathering = 'blueium'#Determines if they're gathering blueium or redium
+
+            if len(self.units) == 3:
+                self.phase = 1
+                self.task = 'gather'
+            elif len(self.units) == 2:
+                self.phase = 2
+                self.task = 'hunt'
+            else:
+                self.phase = 3
+                self.task = 'link2'
+
+        @property
+        def units(self):
+            l = []
+            if self.i_unit: l.append(self.i_unit)
+            if self.m_unit: l.append(self.m_unit)
+            if self.p_unit: l.append(self.p_unit)
+
+            return l
+
+        def remove(self, unit):
+            if unit == self.i_unit: self.i_unit = None
+            if unit == self.m_unit: self.m_unit = None
+            if unit == self.p_unit: self.p_unit = None
+            self.phase += 1
+
+        def add(self, member):
+            type = member.job.title
+
+            if type == 'physicist':
+                if self.p_unit == None:
+                    print("Where I should be P")
+                    print(member)
+                    self.phase -= 1
+                    self.p_unit = member
+                    print("The Length of this group is " + str(len(self.units)))
+                    return True
+            elif type == 'manager':
+                if self.m_unit == None:
+                    print("Where I should be M")
+                    print(member)
+                    self.phase -= 1
+                    self.m_unit = member
+                    print("The Length of this group is " + str(len(self.units)))
+                    return True
+            elif type == 'intern':
+                if self.i_unit == None:
+                    print("Where I should be I")
+                    print(member)
+                    self.phase -= 1
+                    self.i_unit = member
+                    print("The Length of this group is " + str(len(self.units)))
+                    return True
+            else:
+                print("Member has type i don't know how to read -> class group %s" , type)
+            return False
+
     def start(self):
         """ This is called once the game starts and your AI knows its player and
             game. You can initialize your AI here.
         """
         # <<-- Creer-Merge: start -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
         # replace with your start logic
-        class group:
-            def __init__(self, i_unit=None, m_unit=None, p_unit=None):
-                self.i_unit = i_unit
-                self.m_unit = m_unit
-                self.p_unit = p_unit
-                self.gathering = 'blueium'#Determines if they're gathering blueium or redium
-
-                if len(self.units) == 3:
-                    self.phase = 1
-                    self.task = 'gather'
-                elif len(self.units) == 2:
-                    self.phase = 2
-                    self.task = 'hunt'
-                else:
-                    self.phase = 3
-                    self.task = 'link2'
-
-            @property
-            def units(self):
-                l = []
-                if self.i_unit: l.append(self.i_unit)
-                if self.m_unit: l.append(self.m_unit)
-                if self.p_unit: l.append(self.p_unit)
-
-                return l
-
-            def remove(self, unit):
-                if unit == self.i_unit: self.i_unit = None
-                if unit == self.m_unit: self.m_unit = None
-                if unit == self.p_unit: self.p_unit = None
-
-            def add(self, member):
-                type = member.job.title
-
-                if type is 'physicist':
-                    if self.p_unit is None:
-                        self.p_unit = member
-                        return True
-                elif type is 'manager':
-                    if self.m_unit is None:
-                        self.m_unit = member
-                        return True
-                elif type is 'intern':
-                    if self.i_unit is None:
-                        self.i_unit = member
-                        return True
-                else:
-                    print("Member has type i don't know how to read -> class group")
+        self.groups = []
 
         # Un-comment this line if you are using colorama for the debug map.
         # init()
@@ -123,48 +137,85 @@ class AI(BaseAI):
             if not len(group.units):
                 self.groups.remove(group)
                 continue
-
             group.phase = (-(len(group.units) - 2) + 2)
-
-        agents_in_group = [agent for agent in group for group in self.groups]
-
-        agents_to_add = []
-        for agent in self.player.units:
-            if agent not in agents_in_group:
-                agents_to_add.append(agent)
-
-        for agent in agents_to_add:
-            for group in self.groups:
-                if group.add(member):
-                    agents_to_add.remove(agent)
-                    break
-
-        # add agent to group somehow
 
         # if a group in phase 2 or 3 is found append it to a temporary list
         # look through the list of phase 2 and 3 groups and see if there are any
         # combinations to make a phase 1 or 2 IF so initialize a new group with
         # all of new members and delete the old groups
+        phase2_groups = []
+        phase3_groups = []
+        for group in self.groups:
+            if group.phase == 2:
+                phase2_groups.append(group)
+            elif group.phase == 3:
+                phase3_groups.append(group)
+        for phase2 in phase2_groups:
+            for phase3 in phase3_groups:
+                if phase2.add(phase3.units[0]):
+                    phase3.remove[0]
+                    break
+        phase3_groups = []
+        for group in self.groups:
+            if group.phase == 3:
+                phase3_groups.append(group)
+        for phase3 in phase3_groups:
+            for phase3_2 in phase3_groups:
+                if phase3 is phase3_2:
+                    break
+                if phase3.add(phase3.units[0]):
+                    phase3.remove[0]
+                    break
+
+
+
+
+
 
     def group_logic(self, group):
         if group.phase == 1:
-            phase_1(group)
-        elif group.phase == 2:
-            phase_2(group)
-        else:
-            phase_3(group)
+            self.phase_1(group)
+        #elif group.phase == 2:
+            #self.phase_2(group)
+        #else:
+            #self.phase_3(group)
 
     def phase_1(self, group):
         if group.task == 'gather':
             #intern leads the group while gathering 4 resources
             #When the intern has 4 resources the function returns True
             # and the task is witch to 'refine'
-
+            self.action('move', self.output[group.gathering + ' ore'][0]
+            , group.i_unit)
+            group.i_unit.pickup(self.output[group.gathering + ' ore'][0], -1,
+            group.gathering + ' ore')
+            self.output[group.gathering + ' ore'].pop()
+            self.action('move', group.m_unit, group.i_unit.tile)
+            self.action('move', group.p_unit, group.i_unit.tile)
+            if group.gathering == 'blueium':
+                group.i_unit.drop(group.i_unit.tile, group.i_unit.redium_ore,
+                'redium ore')
+                group.i_unit.drop(group.i_unit.tile, group.i_unit.redium,
+                'redium')
+                group.i_unit.drop(group.i_unit.tile, group.i_unit.blueium,
+                'blueium')
+                if group.i_unit.blueium_ore == 4:
+                    group.task = 'refine'
+            else:
+                group.i_unit.drop(group.i_unit.tile, group.i_unit.redium,
+                'redium')
+                group.i_unit.drop(group.i_unit.tile, group.i_unit.blueium,
+                'blueium')
+                group.i_unit.drop(group.i_unit.tile, group.i_unit.bluieum_ore,
+                'blueium ore')
+                if group.i_unit.redium_ore == 4:
+                    group.task = 'refine'
         elif group.task == 'refine':
             #intern leads the group to the refinery, then the physicist refines
             #materials until they are all refined, switches to 'generate' after This
             #occurs
-        else group.task == 'generate':
+            group.task
+        else:
             #Manager and physicist fill their inventorys with refined materials
             #and manager leads to generator. After this task is completed switch
             #back to 'gather task'
@@ -185,6 +236,17 @@ class AI(BaseAI):
         # <<-- Creer-Merge: end -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
         # replace with your end logic
         # <<-- /Creer-Merge: end -->>
+    def createGroups(self):
+        for i in self.player.units:
+            inGroup = False
+            for group in self.groups:
+                for n in group.units:
+                    if i is n:
+                        inGroup = True
+            if inGroup == False:
+                    #print("I MADE A FUCKING GROUP")
+                    self.groups.append(self.Group())
+                    self.groups[-1].add(i)
 
     def run_turn(self):
         """ This is called every time it is this AI.player's turn.
@@ -199,11 +261,14 @@ class AI(BaseAI):
         Please note: This code is intentionally bad. You should try to optimize everything here. THe code here is only to show you how to use the game's
                      mechanics with the MegaMinerAI server framework.
         """
-<<<<<<< HEAD
+        self.createGroups()
         self.group_update()
-=======
->>>>>>> 620c81c424fd050b02fa58acba780550ec3c3ab6
+        print(len(self.groups))
+        for group in self.groups:
+            self.group_logic(group)
 
+        return True
+        """
         # Goes through all the units that you own.
         for unit in self.player.units:
             # Only tries to do something if the unit actually exists.
@@ -349,6 +414,7 @@ class AI(BaseAI):
 
 
         return True
+        """
         # <<-- /Creer-Merge: runTurn -->>
 
     def find_path(self, start, goal):
@@ -494,9 +560,9 @@ class AI(BaseAI):
         return
 
     def parsefield(map):
-        output = {
-        'blueium': [], 'redium': [], 'enemy': [], 'team': [], 'refinery': [],
-        'generator': [], 'spawn': []
+        self.output = {
+        'blueium': [], 'blueium ore': [], 'redium': [], 'redium ore': [], 'enemy': [],
+        'team': [], 'refinery': [], 'generator': [], 'spawn': []
         }
 
         for tile in map:
@@ -506,6 +572,14 @@ class AI(BaseAI):
 
             if tile.redium > 0:
                 output['redium'].append(title)
+                pass
+
+            if tile.blueium > 0:
+                output['blueium ore'].append(tile)
+                pass
+
+            if tile.redium > 0:
+                output['redium ore'].append(title)
                 pass
 
             if tile.machine:
@@ -532,7 +606,7 @@ class AI(BaseAI):
 
 
 
-    def action(self, keywd, tile, unit, path):
+    def action(self, keywd, tile, units):
         path = self.find_path(unit.tile, tile)
         if keywd != 'move':
             path.pop()
@@ -542,11 +616,10 @@ class AI(BaseAI):
 
         if keywd == 'attack':
             unit.attack(tile)
-
         elif keywd != 'move':
             unit.act(tile)
 
-        if unit.acted == True || keywd == 'move':
+        if unit.acted == True or keywd == 'move':
             return True
         else:
             return False
