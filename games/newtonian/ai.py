@@ -8,16 +8,16 @@ from joueur.base_ai import BaseAI
 # you can add additional import(s) here
 
 # Un-comment this line if you would like to use the debug map, which requires the colorama package.
-if debug:
-    from colorama import init, Fore, Back, Style
+#if debug:
+#    from colorama import init, Fore, Back, Style
 
-from base_movements import *
+#from base_movements import *
 
 # <<-- /Creer-Merge: imports -->>
 
 
 class AI(BaseAI):
-    """ The AI you add and improve code inside to play Newtonian. """'
+    """ The AI you add and improve code inside to play Newtonian. """
 
     @property
     def game(self):
@@ -52,8 +52,12 @@ class AI(BaseAI):
         # <<-- Creer-Merge: start -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
         # replace with your start logic
         class group:
-            def __init__(self, *unit):
-                self.units = unit
+            def __init__(self, i_unit=None, m_unit=None, p_unit=None):
+                self.i_unit = i_unit
+                self.m_unit = m_unit
+                self.p_unit = p_unit
+
+
                 if len(self.units) == 3:
                     self.phase = 1
                     self.task = 'gather'
@@ -63,6 +67,40 @@ class AI(BaseAI):
                 else:
                     self.phase = 3
                     self.task = 'link2'
+
+            @property
+            def units(self):
+                l = []
+                if self.i_unit: l.append(self.i_unit)
+                if self.m_unit: l.append(self.m_unit)
+                if self.p_unit: l.append(self.p_unit)
+
+                return l
+
+            def remove(self, unit):
+                if unit == self.i_unit: self.i_unit = None
+                if unit == self.m_unit: self.m_unit = None
+                if unit == self.p_unit: self.p_unit = None
+
+            def add(self, member):
+                type = member.job.title
+
+                if type is 'physicist':
+                    if self.p_unit is None:
+                        self.p_unit = member
+                        return True
+                elif type is 'manager':
+                    if self.m_unit is None:
+                        self.m_unit = member
+                        return True
+                elif type is 'intern':
+                    if self.i_unit is None:
+                        self.i_unit = member
+                        return True
+                else:
+                    print("Member has type i don't know how to read -> class group")
+
+                return False
 
         self.groups = []
         # Un-comment this line if you are using colorama for the debug map.
@@ -79,13 +117,37 @@ class AI(BaseAI):
         # <<-- /Creer-Merge: game-updated -->>
 
     def group_update(self):
-        #go through all of the groups
-            #if a group member has died count the amount of members and adjust
-            #phase accordingly and remove member from list
-            #if a group in phase 2 or 3 is found append it to a temporary list
-        #look through the list of phase 2 and 3 groups and see if there are any
-        #combinations to make a phase 1 or 2 IF so initialize a new group with
-        #all of new members and delete the old groups
+        for group in self.groups:
+            for member in group.units:
+                # See if member is dead
+                if member == None or not member.health:
+                    group.remove(member)
+
+            if not len(group.units):
+                self.groups.remove(group)
+                continue
+
+            group.phase = (-(len(group.units) - 2) + 2)
+
+        agents_in_group = [agent for agent in group for group in self.groups]
+
+        agents_to_add = []
+        for agent in self.player.units:
+            if agent not in agents_in_group:
+                agents_to_add.append(agent)
+
+        for agent in agents_to_add:
+            for group in self.groups:
+                if group.add(member):
+                    agents_to_add.remove(agent)
+                    break
+
+        # add agent to group somehow
+
+        # if a group in phase 2 or 3 is found append it to a temporary list
+        # look through the list of phase 2 and 3 groups and see if there are any
+        # combinations to make a phase 1 or 2 IF so initialize a new group with
+        # all of new members and delete the old groups
 
     def group_logic(self, group):
         if group.phase == 1:
@@ -135,7 +197,8 @@ class AI(BaseAI):
         Please note: This code is intentionally bad. You should try to optimize everything here. THe code here is only to show you how to use the game's
                      mechanics with the MegaMinerAI server framework.
         """
-        group_update()
+        self.group_update()
+        
         # Goes through all the units that you own.
         for unit in self.player.units:
             # Only tries to do something if the unit actually exists.
@@ -439,7 +502,7 @@ class AI(BaseAI):
         elif keywd != 'move':
             unit.act(tile)
 
-        if unit.acted == True || keywd == 'move':
+        if unit.acted == True or keywd == 'move':
             return True
         else:
             return False
