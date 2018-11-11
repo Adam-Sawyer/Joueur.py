@@ -46,6 +46,8 @@ class AI(BaseAI):
             self.i_unit = i_unit
             self.m_unit = m_unit
             self.p_unit = p_unit
+            self.refinery = None
+            self.path = None
             self.gathering = 'blueium'#Determines if they're gathering blueium or redium
 
             self.updateTask()
@@ -111,6 +113,8 @@ class AI(BaseAI):
         # <<-- Creer-Merge: start -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
         # replace with your start logic
         self.groups = []
+
+        self.term_limit = 75
 
         # Un-comment this line if you are using colorama for the debug map.
         # init()
@@ -178,35 +182,44 @@ class AI(BaseAI):
         #else:
             #self.phase_3(group)
 
+    @staticmethod
+    def dist_between(tile_1, tile_2):
+        return abs(tile_1.x - tile_2.x) + abs(tile_1.y - tile_2.y)
+
+    def carrying_amount(self, unit):
+        return sum([unit.blueium, unit.blueium_ore, unit.redium, unit.redium_ore])
+
     def phase_1(self, group):
         if group.task == 'gather':
             if len(self.output[group.gathering + ' ore']) != 0:
                 #intern leads the group while gathering 4 resources
                 #When the intern has 4 resources the function returns True
                 # and the task is witch to 'refine'
-                self.action('move', self.output[group.gathering + ' ore'][0]
-                , group.i_unit)
-                group.i_unit.pickup(self.output[group.gathering + ' ore'][0], -1,
-                group.gathering + ' ore')
-                self.output[group.gathering + ' ore'].pop()
+                self.action('move', self.output[group.gathering + ' ore'][0], group.i_unit)
+                group.i_unit.pickup(self.output[group.gathering + ' ore'][0], -1, '{} ore'.format(group.gathering))
+
+                #self.output[group.gathering + ' ore'].pop()
                 self.action('move', group.i_unit.tile, group.p_unit)
                 self.action('move', group.p_unit.tile, group.m_unit)
                 if group.gathering == 'blueium':
-                    group.i_unit.drop(group.i_unit.tile, group.i_unit.redium_ore,
+                    """group.i_unit.drop(group.i_unit.tile, group.i_unit.redium_ore,
                     'redium ore')
                     group.i_unit.drop(group.i_unit.tile, group.i_unit.redium,
                     'redium')
                     group.i_unit.drop(group.i_unit.tile, group.i_unit.blueium,
-                    'blueium')
+                    'blueium')"""
+
                     if group.i_unit.blueium_ore == 4:
                         group.task = 'refine'
                 else:
+                    """
                     group.i_unit.drop(group.i_unit.tile, group.i_unit.redium,
                     'redium')
                     group.i_unit.drop(group.i_unit.tile, group.i_unit.blueium,
                     'blueium')
                     group.i_unit.drop(group.i_unit.tile, group.i_unit.bluieum_ore,
-                    'blueium ore')
+                    'blueium ore')"""
+
                     if group.i_unit.redium_ore == 4:
                         print("task switched to refine")
                         group.task = 'refine'
@@ -214,12 +227,39 @@ class AI(BaseAI):
             #intern leads the group to the refinery, then the physicist refines
             #materials until they are all refined, switches to 'generate' after This
             #occurs
-            paths = []
-            i = None
-            for i in self.output[group.gathering + ' refinery']:
-                paths.append(find_path(group.i_unit.tile, i))
-            min(paths)
-            self.action('move', i, group.i_unit)
+            if not group.refinery:
+                refinery_distances = {}
+                i = None
+                for i in self.output[group.gathering + ' refinery']:
+                    refinery_distances.update({i: self.dist_between(group.i_unit.tile, i)})
+
+                group.refinery = min(refinery_distances, key=refinery_distances.get)
+
+                group.path = self.find_path(group.i_unit.tile, group.refinery)
+
+            self.action('move', group.refinery, group.i_unit, path=group.path)
+            if self.carrying_amount(group.i_unit) == 0:
+                self.action('move', group.refinery, group.p_unit)
+                self.action('move', group.refinery, group.m_unit)
+                group.p_unit.act(group.refinery)
+                group.p_unit.pickup(group.refinery, 1, group.gathering)
+                group.m_unit.pickup(group.refinery, -1, group.gathering)
+                print(group.m_unit.blueium)
+            else:
+                self.action('move', group.i_unit.tile, group.p_unit)
+                self.action('move', group.p_unit.tile, group.m_unit)
+            group.i_unit.drop(group.refinery, -1, '{} ore'.format(group.gathering))
+
+            if group.gathering == 'blueium':
+                if group.p_unit.blueium == 1 and group.m_unit.blueium == 3:
+                    group.task = 'deliver'
+                    print("task passed!!!!!!!!!!!!!!!!!!!!!!!")
+
+            if group.gathering == 'redium':
+                if group.p_unit.redium == 1 and group.m_unit.redium == 3:
+                    group.task = 'deliver'
+                    print("task passed!!!!!!!!!!!!!!!!!!!!!!")
+
 
 
         else:
@@ -255,7 +295,8 @@ class AI(BaseAI):
                     self.groups[-1].add(i)
 
     def run_turn(self):
-        if self.game.current_turn > 100:
+        if self.game.current_turn > self.term_limit:
+            print("Turn limit reached!")
             sys.exit()
         """ This is called every time it is this AI.player's turn.
 
@@ -437,7 +478,7 @@ class AI(BaseAI):
 
         return total_path[::-1]
 
-    def find_path(self, start, goal):
+    def find_path_old(self, start, goal):
         goals = goal.get_neighbors()
 
         def heuristic_cost_estimate(tile_1, tile_2):
@@ -505,7 +546,7 @@ class AI(BaseAI):
 
         return []
 
-    def find_path_old(self, start, goal):
+    def find_path(self, start, goal):
         """A very basic path finding algorithm (Breadth First Search) that when
             given a starting Tile, will return a valid path to the goal Tile.
 
@@ -658,58 +699,66 @@ class AI(BaseAI):
                 self.output['blueium'].append(tile)
                 pass
 
-            if tile.redium > 0:
+            elif tile.redium > 0:
                 self.output['redium'].append(tile)
                 pass
 
-            if tile.blueium_ore > 0:
+            elif tile.blueium_ore > 0:
                 self.output['blueium ore'].append(tile)
                 pass
 
-            if tile.redium_ore > 0:
+            elif tile.redium_ore > 0:
                 self.output['redium ore'].append(tile)
                 pass
 
-            if tile.machine:
-                if tile.machine.ore_type == 'redium' and tile.machine.worked == 0:
-                    self.output['redium refinery'].append(tile)
+            elif tile.machine:
+                for group in self.groups:
+                    if group.refinery == tile:
+                        break
+                    else:
+                        if tile.machine.ore_type == 'redium' and tile.machine.worked == 0:
+                            self.output['redium refinery'].append(tile)
+                        elif tile.machine.ore_type == 'blueium' and tile.machine.worked == 0:
+                            self.output['blueium refinery'].append(tile)
                     pass
 
-                if tile.machine.ore_type == 'blueium' and tile.machine.worked == 0:
-                    self.output['blueium refinery'].append(tile)
-                    pass
-
-            if tile.type == 'generator':
+            elif tile.type == 'generator':
                 self.output['generator'].append(tile)
                 pass
 
-            if tile.type == 'conveyor':
+            elif tile.type == 'conveyor':
                 self.output['conveyor'].append(tile)
                 pass
 
-            if tile.type == 'spawn':
+            elif tile.type == 'spawn':
                 self.output['spawn'].append(tile)
                 pass
 
-            if tile.unit:
+            elif tile.unit:
                 if tile.unit.owner == self.player.opponent:  # TODO - double check
                     self.output['team'].append(tile)
                 else:
                     self.output['enemy'].append(tile)
 
-
-
-    def action(self, keywd, tile, unit):
+    def action(self, keywd, tile, unit, path=None):
+        #if path is None:
         path = self.find_path(unit.tile, tile)
+
         if keywd != 'move':
             path.pop()
 
         for t in path:
             if unit.moves == 0:
                 break
+            # see if we can move then do it
+            # If path hardcoded and we are stuck make new
 
-            print(unit.tile.x, unit.tile.y)
-            unit.move(t)
+            # if can move do it
+            if is
+            # else try and get new path
+            # if cant get new path break
+            if not unit.move(t):
+                pass#path = self.find_path(unit.tile, tile)
 
         if keywd == 'attack':
             unit.attack(tile)
