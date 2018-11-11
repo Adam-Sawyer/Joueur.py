@@ -48,15 +48,7 @@ class AI(BaseAI):
             self.p_unit = p_unit
             self.gathering = 'blueium'#Determines if they're gathering blueium or redium
 
-            if len(self.units) == 3:
-                self.phase = 1
-                self.task = 'gather'
-            elif len(self.units) == 2:
-                self.phase = 2
-                self.task = 'hunt'
-            else:
-                self.phase = 3
-                self.task = 'link2'
+            self.updateTask()
 
         @property
         def units(self):
@@ -76,6 +68,17 @@ class AI(BaseAI):
             if unit == self.p_unit: self.p_unit = None
             self.phase += 1
 
+        def updateTask(self):
+            if len(self.units) == 3:
+                self.phase = 1
+                self.task = 'gather'
+            elif len(self.units) == 2:
+                self.phase = 2
+                self.task = 'hunt'
+            else:
+                self.phase = 3
+                self.task = 'link2'
+
         def add(self, member):
             type = member.job.title
 
@@ -83,19 +86,23 @@ class AI(BaseAI):
                 if self.p_unit == None:
                     self.phase -= 1
                     self.p_unit = member
+                    self.updateTask()
                     return True
             elif type == 'manager':
                 if self.m_unit == None:
                     self.phase -= 1
                     self.m_unit = member
+                    self.updateTask()
                     return True
             elif type == 'intern':
                 if self.i_unit == None:
                     self.phase -= 1
                     self.i_unit = member
+                    self.updateTask()
                     return True
             else:
-            return False
+                print("Not a recognized type")
+                return False
 
     def start(self):
         """ This is called once the game starts and your AI knows its player and
@@ -173,34 +180,35 @@ class AI(BaseAI):
 
     def phase_1(self, group):
         if group.task == 'gather':
-            #intern leads the group while gathering 4 resources
-            #When the intern has 4 resources the function returns True
-            # and the task is witch to 'refine'
-            self.action('move', self.output[group.gathering + ' ore'][0]
-            , group.i_unit)
-            group.i_unit.pickup(self.output[group.gathering + ' ore'][0], -1,
-            group.gathering + ' ore')
-            self.output[group.gathering + ' ore'].pop()
-            self.action('move', group.m_unit, group.i_unit.tile)
-            self.action('move', group.p_unit, group.i_unit.tile)
-            if group.gathering == 'blueium':
-                group.i_unit.drop(group.i_unit.tile, group.i_unit.redium_ore,
-                'redium ore')
-                group.i_unit.drop(group.i_unit.tile, group.i_unit.redium,
-                'redium')
-                group.i_unit.drop(group.i_unit.tile, group.i_unit.blueium,
-                'blueium')
-                if group.i_unit.blueium_ore == 4:
-                    group.task = 'refine'
-            else:
-                group.i_unit.drop(group.i_unit.tile, group.i_unit.redium,
-                'redium')
-                group.i_unit.drop(group.i_unit.tile, group.i_unit.blueium,
-                'blueium')
-                group.i_unit.drop(group.i_unit.tile, group.i_unit.bluieum_ore,
-                'blueium ore')
-                if group.i_unit.redium_ore == 4:
-                    group.task = 'refine'
+            if len(self.output[group.gathering + ' ore']) != 0:
+                #intern leads the group while gathering 4 resources
+                #When the intern has 4 resources the function returns True
+                # and the task is witch to 'refine'
+                self.action('move', self.output[group.gathering + ' ore'][0]
+                , group.i_unit)
+                group.i_unit.pickup(self.output[group.gathering + ' ore'][0], -1,
+                group.gathering + ' ore')
+                self.output[group.gathering + ' ore'].pop()
+                self.action('move', group.i_unit.tile, group.p_unit)
+                self.action('move', group.p_unit.tile, group.m_unit)
+                if group.gathering == 'blueium':
+                    group.i_unit.drop(group.i_unit.tile, group.i_unit.redium_ore,
+                    'redium ore')
+                    group.i_unit.drop(group.i_unit.tile, group.i_unit.redium,
+                    'redium')
+                    group.i_unit.drop(group.i_unit.tile, group.i_unit.blueium,
+                    'blueium')
+                    if group.i_unit.blueium_ore == 4:
+                        group.task = 'refine'
+                else:
+                    group.i_unit.drop(group.i_unit.tile, group.i_unit.redium,
+                    'redium')
+                    group.i_unit.drop(group.i_unit.tile, group.i_unit.blueium,
+                    'blueium')
+                    group.i_unit.drop(group.i_unit.tile, group.i_unit.bluieum_ore,
+                    'blueium ore')
+                    if group.i_unit.redium_ore == 4:
+                        group.task = 'refine'
         elif group.task == 'refine':
             #intern leads the group to the refinery, then the physicist refines
             #materials until they are all refined, switches to 'generate' after This
@@ -251,6 +259,7 @@ class AI(BaseAI):
         Please note: This code is intentionally bad. You should try to optimize everything here. THe code here is only to show you how to use the game's
                      mechanics with the MegaMinerAI server framework.
         """
+        self.parsefield()
         self.createGroups()
         self.group_update()
         for group in self.groups:
@@ -548,59 +557,61 @@ class AI(BaseAI):
 
         return
 
-    def parsefield(map):
+    def parsefield(self):
         self.output = {
         'blueium': [], 'blueium ore': [], 'redium': [], 'redium ore': [], 'enemy': [],
-        'team': [], 'refinery': [], 'generator': [], 'spawn': []
+        'team': [], 'refinery': [], 'generator': [], 'spawn': [], 'conveyor': []
         }
 
-        for tile in map:
+        for tile in self.game.tiles:
             if tile.blueium > 0:
-                output['blueium'].append(tile)
+                self.output['blueium'].append(tile)
                 pass
 
             if tile.redium > 0:
-                output['redium'].append(title)
+                self.output['redium'].append(tile)
                 pass
 
-            if tile.blueium > 0:
-                output['blueium ore'].append(tile)
+            if tile.blueium_ore > 0:
+                self.output['blueium ore'].append(tile)
                 pass
 
-            if tile.redium > 0:
-                output['redium ore'].append(title)
+            if tile.redium_ore > 0:
+                self.output['redium ore'].append(tile)
                 pass
 
             if tile.machine:
-                output['refinery'].append(tile)
+                self.output['refinery'].append(tile)
                 pass
 
             if tile.type == 'generator':
-                output['generator'].append(tile)
+                self.output['generator'].append(tile)
                 pass
 
             if tile.type == 'conveyor':
-                output['conveyor'].append(tile)
+                self.output['conveyor'].append(tile)
                 pass
 
             if tile.type == 'spawn':
-                output['spawn'].append(tile)
+                self.output['spawn'].append(tile)
                 pass
 
             if tile.unit:
-                if tile.unit.owner == self.player.enemy:  # TODO - double check
-                    output['team'].append(tile)
+                if tile.unit.owner == self.player.opponent:  # TODO - double check
+                    self.output['team'].append(tile)
                 else:
-                    output['enemy'].append(tile)
+                    self.output['enemy'].append(tile)
 
 
 
-    def action(self, keywd, tile, units):
+    def action(self, keywd, tile, unit):
         path = self.find_path(unit.tile, tile)
         if keywd != 'move':
             path.pop()
 
         for t in path:
+            if unit.moves == 0:
+                break
             unit.move(t)
 
         if keywd == 'attack':
