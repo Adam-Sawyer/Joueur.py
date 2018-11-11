@@ -6,7 +6,7 @@ from joueur.base_ai import BaseAI
 
 # <<-- Creer-Merge: imports -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
 # you can add additional import(s) here
-
+import sys
 # Un-comment this line if you would like to use the debug map, which requires the colorama package.
 
 # <<-- /Creer-Merge: imports -->>
@@ -428,6 +428,9 @@ class AI(BaseAI):
         return total_path
 
     def find_path(self, start, goal):
+        print("Finding path")
+        goals = goal.get_neighbors()
+
         def heuristic_cost_estimate(tile_1, tile_2):
             return ((tile_2.y - tile_1.y)**2 + (tile_2.x - tile_1.x)**2)**.5
 
@@ -461,11 +464,15 @@ class AI(BaseAI):
         f_score[start] = heuristic_cost_estimate(start, goal)
 
         while open_set:
-            current = min(f_score, key=f_score.get)  #the node in open_set having the lowest f_score[] value
-            if current == goal:
+            parsed_f_score = {key: value for key, value in f_score.items() if key in open_set}
+            current = min(parsed_f_score, key=parsed_f_score.get)  #the node in open_set having the lowest f_score[] value
+
+            if current in goals:
                 return self.reconstruct_path(comes_from, current)
 
-            if current in open_set: open_set.remove(current)
+            if current in open_set:
+                open_set.remove(current)
+
             closed_set.add(current)
 
             for neighbor in current.get_neighbors():
@@ -476,7 +483,8 @@ class AI(BaseAI):
                 tentative_gScore = g_score[current] + dist_between(current, neighbor)
 
                 if neighbor not in open_set: # Discover a new node
-                    open_set.add(neighbor)
+                    if not neighbor.is_wall:
+                        open_set.add(neighbor)
 
                 elif tentative_gScore >= g_score[neighbor]:
                     continue # This is not a better path.
