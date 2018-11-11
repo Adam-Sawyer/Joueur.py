@@ -213,7 +213,14 @@ class AI(BaseAI):
             #intern leads the group to the refinery, then the physicist refines
             #materials until they are all refined, switches to 'generate' after This
             #occurs
-            group.task
+            paths = []
+            i = None
+            for i in self.output[group.gathering + ' refinery']:
+                paths.append(find_path(group.i_unit.tile, i))
+            min(paths)
+            self.action('move', i, group.i_unit)
+
+
         else:
             #Manager and physicist fill their inventorys with refined materials
             #and manager leads to generator. After this task is completed switch
@@ -633,7 +640,7 @@ class AI(BaseAI):
     def parsefield(self):
         self.output = {
         'blueium': [], 'blueium ore': [], 'redium': [], 'redium ore': [], 'enemy': [],
-        'team': [], 'refinery': [], 'generator': [], 'spawn': [], 'conveyor': []
+        'team': [], 'blueium refinery': [], 'redium refinery': [],'generator': [], 'spawn': [], 'conveyor': []
         }
 
         for tile in self.game.tiles:
@@ -653,8 +660,12 @@ class AI(BaseAI):
                 self.output['redium ore'].append(tile)
                 pass
 
-            if tile.machine:
-                self.output['refinery'].append(tile)
+            if tile.machine.ore_type = 'redium' and tile.machine.worked == 0:
+                self.output['redium refinery'].append(tile)
+                pass
+
+            if tile.machine.ore_type = 'blueium' and tile.machine.worked == 0:
+                self.output['blueium refinery'].append(tile)
                 pass
 
             if tile.type == 'generator':
